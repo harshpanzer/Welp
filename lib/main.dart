@@ -42,6 +42,7 @@ class _MyHomePageState extends State<MyHomePage> {
   late List<dynamic> location1;
   late LatLng curr;
   late TextEditingController location = TextEditingController();
+  int heart = 0;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -120,6 +121,21 @@ class _MyHomePageState extends State<MyHomePage> {
                         location1: location1)));
               },
               child: Text("Search")),
+          SizedBox(
+            height: 50,
+          ),
+          Text(heart.toString()),
+          SizedBox(
+            height: 20,
+          ),
+          TextButton(
+              onPressed: () async {
+                heart = await heartbeat();
+                setState(() {
+                  heart;
+                });
+              },
+              child: Text("Get HeartBeat"))
         ],
       ),
       // This trailing comma makes auto-formatting nicer for build methods.
@@ -138,7 +154,7 @@ class _MyHomePageState extends State<MyHomePage> {
     return curr;
   }
 
-  Future<List<dynamic>> loc() async {
+  Future loc() async {
     try {
       Response response = await http.post(
           Uri.parse("https://welp-backend-upwk.onrender.com/geocode"),
@@ -160,6 +176,31 @@ class _MyHomePageState extends State<MyHomePage> {
     } catch (e) {
       print(e.toString());
       return [0, 0];
+    }
+  }
+
+  Future<int> heartbeat() async {
+    try {
+      Response response = await http.get(
+        Uri.parse("https://welp-backend.onrender.com/api/heartrate"),
+        headers: {
+          'Content-Type': "application/json",
+        },
+      );
+      print(response.statusCode);
+      if (response.statusCode == 200) {
+        var jsonData = jsonDecode(response.body);
+        print(jsonData["heart_rate"]);
+
+        print("Successfull");
+        return jsonData["heart_rate"];
+      } else {
+        print("nahi hua");
+        return 1;
+      }
+    } catch (e) {
+      print(e.toString());
+      return 1;
     }
   }
 }
