@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:open_route_service/open_route_service.dart';
+import 'package:welpoc/home.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key, required this.location, required this.location1});
@@ -38,103 +39,110 @@ class _MapViewState extends State<MapScreen> {
 
   Widget build(BuildContext context) {
     return Scaffold(
+        // drawer: HomeView(),
         body: Stack(
-      children: [
-        Center(
-          child: Container(
-            child: FlutterMap(
-              options: MapOptions(
-                initialCenter: LatLng(widget.location[0], widget.location[1]),
-                initialZoom: 18,
-              ),
-              mapController: controller,
-              children: [
-                TileLayer(
-                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                  userAgentPackageName: 'com.example.app',
-                ),
-                MarkerLayer(
-                  markers: [
-                    Marker(
-                      point: LatLng(20, 78),
-                      width: 80,
-                      height: 80,
-                      child: FlutterLogo(),
+          children: [
+            Center(
+              child: Container(
+                child: FlutterMap(
+                  options: MapOptions(
+                    initialCenter:
+                        LatLng(widget.location[0], widget.location[1]),
+                    initialZoom: 18,
+                  ),
+                  mapController: controller,
+                  children: [
+                    TileLayer(
+                      urlTemplate:
+                          'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                      userAgentPackageName: 'com.example.app',
                     ),
+                    MarkerLayer(
+                      markers: [
+                        Marker(
+                          point: LatLng(20, 78),
+                          width: 80,
+                          height: 80,
+                          child: FlutterLogo(),
+                        ),
+                      ],
+                    ),
+
+                    FutureBuilder(
+                        future: route(),
+                        builder:
+                            (BuildContext context, AsyncSnapshot snapshot) {
+                          // Checking if future is resolved
+
+                          if (snapshot.connectionState ==
+                              ConnectionState.done) {
+                            // If we got an error
+                            if (snapshot.hasError) {
+                              return Center(
+                                child: Text(
+                                  '${snapshot.error} occurred',
+                                  style: TextStyle(fontSize: 18),
+                                ),
+                              );
+
+                              // if we got our data
+                            } else if (snapshot.hasData) {
+                              // Extracting data from snapshot object
+
+                              return Stack(children: [
+                                PolylineLayer(
+                                  polylines: [snapshot.data],
+                                ),
+                                CircleLayer(
+                                  circles: [
+                                    for (int i = 0; i < 4; i++)
+                                      if (zones[i] > 0)
+                                        CircleMarker(
+                                          point: LatLng(send_coodinates[i][0],
+                                              send_coodinates[i][1]),
+                                          radius: 2000,
+                                          color:
+                                              Color.fromARGB(255, 49, 212, 37)
+                                                  .withOpacity(0.4),
+                                          useRadiusInMeter: true,
+                                        ),
+                                    for (int i = 0; i < 4; i++)
+                                      if (zones[i] == 0)
+                                        CircleMarker(
+                                          point: LatLng(send_coodinates[i][0],
+                                              send_coodinates[i][1]),
+                                          radius: 2000,
+                                          color:
+                                              Color.fromARGB(255, 232, 30, 30)
+                                                  .withOpacity(0.4),
+                                          useRadiusInMeter: true,
+                                        ),
+                                  ],
+                                ),
+                              ]);
+                            }
+                          } else {
+                            return CircularProgressIndicator();
+                          }
+                          return CircularProgressIndicator();
+                        }),
+                    // if (send_coodinates.isNotEmpty)
+
+                    //
+                    // RichAttributionWidget(
+                    //   attributions: [
+                    //     TextSourceAttribution(
+                    //       'OpenStreetMap contributors',
+                    //       onTap: () => launchUrl(Uri.parse('https://openstreetmap.org/copyright')),
+                    //     ),
+                    //   ],
+                    // ),
                   ],
                 ),
-
-                FutureBuilder(
-                    future: route(),
-                    builder: (BuildContext context, AsyncSnapshot snapshot) {
-                      // Checking if future is resolved
-
-                      if (snapshot.connectionState == ConnectionState.done) {
-                        // If we got an error
-                        if (snapshot.hasError) {
-                          return Center(
-                            child: Text(
-                              '${snapshot.error} occurred',
-                              style: TextStyle(fontSize: 18),
-                            ),
-                          );
-
-                          // if we got our data
-                        } else if (snapshot.hasData) {
-                          // Extracting data from snapshot object
-
-                          return Stack(children: [
-                            PolylineLayer(
-                              polylines: [snapshot.data],
-                            ),
-                            CircleLayer(
-                              circles: [
-                                for (int i = 0; i < 4; i++)
-                                  if (zones[i] >0)
-                                    CircleMarker(
-                                      point: LatLng(send_coodinates[i][0],
-                                          send_coodinates[i][1]),
-                                      radius: 2000,
-                                      color: Color.fromARGB(255, 49, 212, 37)
-                                          .withOpacity(0.4),
-                                      useRadiusInMeter: true,
-                                    ),
-                                for (int i = 0; i < 4; i++)
-                                  if (zones[i] == 0)
-                                    CircleMarker(
-                                      point: LatLng(send_coodinates[i][0],
-                                          send_coodinates[i][1]),
-                                      radius: 2000,
-                                      color: Color.fromARGB(255, 232, 30, 30)
-                                          .withOpacity(0.4),
-                                      useRadiusInMeter: true,
-                                    ),
-                              ],
-                            ),
-                          ]);
-                        }
-                      } else {
-                        return CircularProgressIndicator();
-                      }
-                      return CircularProgressIndicator();
-                    }),
-                // if (send_coodinates.isNotEmpty)
-
-                //
-                // RichAttributionWidget(
-                //   attributions: [
-                //     TextSourceAttribution(
-                //       'OpenStreetMap contributors',
-                //       onTap: () => launchUrl(Uri.parse('https://openstreetmap.org/copyright')),
-                //     ),
-                //   ],
-                // ),
-              ],
+              ),
             ),
-          ),
-        ),
-      ],
-    ));
+          ],
+        ));
   }
 
   Future<Polyline> route() async {
